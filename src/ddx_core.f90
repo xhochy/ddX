@@ -2848,13 +2848,13 @@ subroutine print_header(params)
     string = " "
     call params % print_func(string)
     if (params % model .eq. 1) then
-        if (params % force .eq. 0) then 
+        if (params % force .eq. 0) then
             string = " performing a ddCOSMO solvation energy calculation"
         else if (params % force .eq. 1) then
             string = " performing a ddCOSMO solvation energy and forces calculation"
         end if
     else if (params % model .eq. 2) then
-        if (params % force .eq. 0) then 
+        if (params % force .eq. 0) then
             string = " performing a ddPCM solvation energy calculation"
         else if (params % force .eq. 1) then
             string = " performing a ddPCM solvation energy and forces calculation"
@@ -2874,12 +2874,10 @@ subroutine print_header(params)
     else
         write (string,'(t3,A,F10.4)') 'dielectric constant: ', params % eps
     end if
-
     if (params % fmm .eq. 1) then
         string = " using the fast multipole method to accelerate the calculation"
         call params % print_func(string)
     end if
-
     string = " using the following numerical parameters for the calculation:"
     call params % print_func(string)
     write(string,1010) 'maximal degree of spherical harmonics for the model:',params % lmax
@@ -2897,6 +2895,60 @@ subroutine print_header(params)
     string = " "
     call params % print_func(string)
 end subroutine print_header
+
+!> Transform a function defined at the exposed cavity points (cav) to
+!> a spherical harmonics expansion. Note that the function is also
+!> multiplied by the characteristic function U.
+!!
+!! @param[in] params: ddx parameters
+!! @param[in] constants: ddx constants
+!! @param[inout] workspace: ddx workspace
+!! @param[in] property_cav: property defined at the exposed cavity points,
+!!      size (ncav)
+!! @param[out] property_sph: property as a spherical harmonics expansion,
+!!      size (nbasis, nsph)
+subroutine cav_to_spherical(params, constants, workspace, property_cav, &
+        & property_sph)
+    implicit none
+    type(ddx_params_type), intent(in) :: params
+    type(ddx_constants_type), intent(in) :: constants
+    type(ddx_workspace_type), intent(inout) :: workspace
+    real(dp), intent(in) :: property_cav(constants % ncav)
+    real(dp), intent(out) :: property_sph(constants % nbasis, params % nsph)
+
+    ! multiply by the characteristic function U
+    workspace % tmp_cav = proerty_cav * constants % ui_cav
+
+    ! extend the function to the sphere intersection with zeros
+    call ddcav_to_grid_work(params % ngrid, params % nsph, constants % ncav, &
+        & constants % icav_ia, constants % icav_ja, workspace % tmp_cav, &
+        & workspace % tmp_grid)
+
+    ! integrate against spherical harmonics
+    call ddintegrate(params % nsph, constants % nbasis, &
+        & params % ngrid, constants % vwgrid, constants % vgrid_nbasis, &
+        & workspace % tmp_grid, property_sph)
+end subroutine cav_to_spherical
+
+!> Given the potential at the cavity points, assemble the RHS for ddCOSMO
+!> or for ddPCM.
+!!
+!! @param[in] params: ddx parameters
+!! @param[in] constants: ddx constants
+!! @param[inout] workspace: ddx workspace
+!! @param[inout] state: ddx state
+!! @param[in] phi_cav: electrostatic potential at the cavity points
+subroutine ddcosmo_ddpcm_rhs(params, constants, workspace, state, phi_cav)
+    implicit none
+    type(ddx_params_type), intent(in) :: params
+    type(ddx_constants_type), intent(in) :: constants
+    type(ddx_workspace_type), intent(inout) :: workspace
+    type(ddx_state_type), intent(inout) :: state
+    real(dp), intent(in) :: phi_cav(constants % ncav)
+    call cav_to_spherical(params, constants, workspace, phi_cav, &
+        & state % phi)
+    state % phi = - state % phi
+end subroutine ddcosmo_ddpcm_rhs
 
 end module ddx_core
 

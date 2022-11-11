@@ -57,7 +57,9 @@ subroutine ddpcm(params, constants, workspace, state, phi_cav, &
     if (params % force .eq. 1) then
         ! solve the adjoint
         call ddpcm_guess_adjoint(params, constants, workspace, state, psi)
+        if (workspace % error_flag .eq. 1) return
         call ddpcm_solve_adjoint(params, constants, workspace, state, psi, tol)
+        if (workspace % error_flag .eq. 1) return
 
         ! evaluate the solvent unspecific contribution analytical derivatives
         call ddpcm_solvation_force_terms(params, constants, workspace, &

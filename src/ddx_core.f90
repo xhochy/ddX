@@ -1547,19 +1547,6 @@ subroutine ddintegrate_sph(params, constants, alpha, x_grid, beta, x_sph, info)
     !! Local variables
     character(len=255) :: string
     !! The code
-    ! Check that parameters and constants are correctly initialized
-    if (params % error_flag .ne. 0) then
-        string = "ddintegrate_sph: `params` is in error state"
-        call params % print_func(string)
-        info = 1
-        return
-    end if
-    if (constants % error_flag .ne. 0) then
-        string = "ddintegrate_sph: `constants` is in error state"
-        call params % print_func(string)
-        info = 1
-        return
-    end if
     ! Call corresponding work routine
     call ddintegrate_sph_work(constants % nbasis, params % ngrid, &
         & params % nsph, constants % vwgrid, constants % vgrid_nbasis, alpha, &
@@ -2949,6 +2936,35 @@ subroutine ddcosmo_ddpcm_rhs(params, constants, workspace, state, phi_cav)
         & state % phi)
     state % phi = - state % phi
 end subroutine ddcosmo_ddpcm_rhs
+
+!> Logical function to check whether an error flag has be set.
+!> This function copies the message to ddx_data % params % error_message
+!> so that it can be printed by the calling program.
+!!
+!! @param[in] ddx_data: ddx data
+!! @param[in] state: ddx state
+logical function ddx_error(params,constants,workspace,state)
+    implicit none
+    type(ddx_params_type), intent(inout) :: params
+    type(ddx_constants_type), intent(in) :: constants
+    type(ddx_workspace_type), intent(in) :: workspace
+    type(ddx_state_type), intent(in) :: state
+!
+    if (params % error_flag .eq. 1 ) then
+        ddx_error = .true.
+    else if (constants % error_flag .eq. 1 ) then
+        ddx_error = .true.
+        params % error_message = contants % error_message
+    else if (ddx_data % workspace % error_flag .eq. 1 ) then
+        ddx_error = .true.
+        params % error_message = workspace % error_message
+    else if (state % error_flag .eq. 1) then
+        ddx_error = .true.
+        params % error_message = state % error_message
+    else
+        ddx_error = .false.
+    end if
+end function ddx_error
 
 end module ddx_core
 

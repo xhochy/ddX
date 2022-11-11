@@ -50,6 +50,8 @@ subroutine ddcosmo(params, constants, workspace, state, phi_cav, gradphi_cav, &
     call ddcosmo_ddpcm_rhs(params, constants, workspace, state, phi_cav)
     call ddcosmo_guess(params, constants, workspace, state)
     call ddcosmo_solve(params, constants, workspace, state, tol)
+    ! check if ddcosmo_solve is in error
+    if (workspace % error_flag .eq. 1) return
 
     ! Solvation energy is computed
     esolv = pt5*ddot(constants % n, state % xs, 1, psi, 1)
@@ -60,6 +62,7 @@ subroutine ddcosmo(params, constants, workspace, state, phi_cav, gradphi_cav, &
         call ddcosmo_guess_adjoint(params, constants, workspace, state, psi)
         call ddcosmo_solve_adjoint(params, constants, workspace, state, &
             & psi, tol)
+        if (workspace % error_flag .eq. 1) return
 
         ! evaluate the analytical derivatives
         force = zero
@@ -130,6 +133,7 @@ subroutine ddcosmo_solve(params, constants, workspace, state, tol)
     call jacobi_diis(params, constants, workspace, tol, state % phi, &
         & state % xs, state % xs_niter, state % xs_rel_diff, lx, ldm1x, &
         & hnorm)
+    if (workspace % error_flag .eq. 1) return
     finish_time = omp_get_wtime()
     state % xs_time = finish_time - start_time
 

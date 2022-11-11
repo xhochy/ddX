@@ -2954,8 +2954,8 @@ logical function ddx_error(params,constants,workspace,state)
         ddx_error = .true.
     else if (constants % error_flag .eq. 1 ) then
         ddx_error = .true.
-        params % error_message = contants % error_message
-    else if (ddx_data % workspace % error_flag .eq. 1 ) then
+        params % error_message = constants % error_message
+    else if (workspace % error_flag .eq. 1 ) then
         ddx_error = .true.
         params % error_message = workspace % error_message
     else if (state % error_flag .eq. 1) then

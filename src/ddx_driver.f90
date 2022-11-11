@@ -78,7 +78,7 @@ call ddsolve(ddx_data, state, phi_cav, gradphi_cav, hessianphi_cav, psi, &
     & tol, esolv, force)
 !
 ! check whether ddsolve was successful:
-if (ddx_error(ddx_data % params, ddx_data % contants, ddx_data % workspace, &
+if (ddx_error(ddx_data % params, ddx_data % constants, ddx_data % workspace, &
      & state)) then
     write(*,*) trim(ddx_data % params % error_message)
     stop
@@ -90,7 +90,7 @@ start_time = omp_get_wtime()
 call grad_phi_for_charges(ddx_data % params, ddx_data % constants, &
     & ddx_data % workspace, state, ddx_data % params % charge, &
     & force, -gradphi_cav)
-if (ddx_error(ddx_data % params, ddx_data % contants, ddx_data % workspace, &
+if (ddx_error(ddx_data % params, ddx_data % constants, ddx_data % workspace, &
      & state)) then
     write(*,*) trim(ddx_data % params % error_message)
     stop

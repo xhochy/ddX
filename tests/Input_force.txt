@@ -1,5 +1,5 @@
 ''          ! Name of log-file for additional information
-1           ! Number of OpenMP cores to be used
+4           ! Number of OpenMP cores to be used
 2           ! Model. 1 for COSMO, 2 for PCM and 3 for LPB
 10          ! Maximal degree of modeling spherical harmonics
 302         ! Approximate number of Lebedev grid points
